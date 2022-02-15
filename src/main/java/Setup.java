@@ -6,7 +6,9 @@ import java.util.Properties;
 import java.util.Scanner;
 
 public class Setup {
-
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_RED = "\u001B[31m";
+    private static final String ANSI_GREEN = "\u001B[32m";
     private final String defaultConfigName = "app.config";
     private Properties properties;
 
@@ -16,7 +18,7 @@ public class Setup {
     public Setup() {
         File file = new File(defaultConfigName);
         if(file.exists()) {
-            System.out.println("Config found");
+            System.out.println("Config found " + ANSI_GREEN + "\u2713" + ANSI_RESET);
         } else {
             System.out.println("Starting setup...");
             this.startSetup();
@@ -36,7 +38,7 @@ public class Setup {
         }
 
         if (!isCreated) {
-            System.out.println("Failed to create config file");
+            System.out.println("Failed to create config file " + ANSI_RED + "\u2717" + ANSI_RESET);
             System.exit(0);
         }
 
@@ -63,10 +65,10 @@ public class Setup {
             this.properties.setProperty("PlaylistId", playlistId);
             this.properties.setProperty("PlaylistIdWeekly", playlistIdWeekly);
             this.properties.store(new FileWriter(defaultConfigName), null);
-            System.out.println("Added settings to " + defaultConfigName);
+            fileReader.close();
+            System.out.println("Added settings to " + defaultConfigName + ANSI_GREEN + "\u2713" + ANSI_RESET);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        //TODO: Test if client id and secret works
     }
 }
