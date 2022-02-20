@@ -1,5 +1,6 @@
 import org.json.JSONArray;
 import org.json.JSONObject;
+import util.PropertyHandler;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -20,13 +21,14 @@ public class Spotify {
     private final String apiUrl = "https://api.spotify.com/v1/";
     private final String market = "DE";
     private ArrayList<String> trackIds = new ArrayList<>();
+    private PropertyHandler rp;
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_RED = "\u001B[31m";
     public static final String ANSI_GREEN = "\u001B[32m";
 
 
     public Spotify() {
-        ReadProperties rp = new ReadProperties();
+        this.rp = new PropertyHandler();
         this.clientId = rp.getProperty("ClientId");
         this.clientSecret = rp.getProperty("ClientSecret");
         this.playlistId = rp.getProperty("PlaylistId");
@@ -53,16 +55,20 @@ public class Spotify {
             HttpResponse<String> response = HttpClient.newHttpClient()
                     .send(hr, HttpResponse.BodyHandlers.ofString());
 
-            if(response.statusCode() >= 200 && response.statusCode() < 300) {
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 JSONObject jsonResponse = new JSONObject(response.body());
                 this.accessToken = jsonResponse.getString("access_token");
+                if (jsonResponse.has("refresh_token")) {
+                    rp.setProperty("RefreshToken", jsonResponse.getString("refresh_token"));
+                    System.out.println("Saved new refresh token " + ANSI_GREEN + "\u2713" + ANSI_RESET);
+                }
 
                 System.out.println("Get Auth Token successfully " + ANSI_GREEN + "\u2713" + ANSI_RESET);
             } else {
                 System.out.println("Failed to get Auth Token " + ANSI_RED + "\u2717" + ANSI_RESET);
             }
 
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -78,7 +84,7 @@ public class Spotify {
             HttpResponse<String> response = HttpClient.newHttpClient()
                     .send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
-            if(response.statusCode() >= 200 && response.statusCode() < 300) {
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 JSONObject jsonResponse = new JSONObject(response.body());
                 JSONObject tracks = jsonResponse.getJSONObject("tracks");
                 JSONArray items = tracks.getJSONArray("items");
@@ -129,13 +135,13 @@ public class Spotify {
             HttpResponse<String> response = HttpClient.newHttpClient()
                     .send(hr, HttpResponse.BodyHandlers.ofString());
 
-            if(response.statusCode() >= 200 && response.statusCode() < 300) {
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 System.out.println("Tracks added successfully " + ANSI_GREEN + "\u2713" + ANSI_RESET);
             } else {
                 System.out.println("Failed to add songs " + ANSI_RED + "\u2717" + ANSI_RESET);
             }
 
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
