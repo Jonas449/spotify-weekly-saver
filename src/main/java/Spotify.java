@@ -39,9 +39,10 @@ public class Spotify {
 
         this.getAuthToken();
         this.trackIds = this.getSongs(this.playlistIdWeekly);
-        //this.addSongs();
+        this.addSongs();
 
         if (Boolean.parseBoolean(rp.getProperty("CheckDuplications"))) {
+            System.out.println("Checking for duplicates...");
             this.removeTrack(this.checkDuplications());
         }
     }
@@ -182,21 +183,20 @@ public class Spotify {
             track.put("uri", "spotify:track:" + trackId);
             jsonArray.put(track);
         }
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("tracks", jsonArray);
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("tracks", jsonArray);
 
         try {
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(new URI(this.apiUrl + "playlist/" + this.playlistId + "/tracks"))
+                    .uri(new URI(this.apiUrl + "playlists/" + this.playlistId + "/tracks"))
                     .header("Authorization", "Bearer " + this.accessToken)
                     .header("Content-Type", "application/json")
-                    .method("DELETE", HttpRequest.BodyPublishers.ofString(jsonObject.toString()))
+                    .method("DELETE", HttpRequest.BodyPublishers.ofString(requestBody.toString()))
                     .build();
 
             HttpResponse<String> response = HttpClient.newHttpClient()
                     .send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println(response);
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 System.out.printf("%d tracks removed" + ANSI_GREEN + "\u2713" + ANSI_RESET + "\n", trackIds.size());
             } else {
