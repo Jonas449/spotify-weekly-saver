@@ -39,7 +39,7 @@ public class Spotify {
 
         this.getAuthToken();
         this.trackIds = this.getSongs(this.playlistIdWeekly);
-        this.addSongs();
+        //this.addSongs();
 
         if (Boolean.parseBoolean(rp.getProperty("CheckDuplications"))) {
             this.removeTrack(this.checkDuplications());
@@ -168,25 +168,40 @@ public class Spotify {
         }
 
         if (set.size() < trackIds.size()) {
-            System.out.printf("%d duplicates found", trackIds.size() - set.size());
+            System.out.printf("%d duplicates found \n", trackIds.size() - set.size());
         }
 
         return duplicates;
     }
 
     private void removeTrack(ArrayList<String> trackIds) {
+        JSONArray jsonArray = new JSONArray();
+
+        for (String trackId: trackIds) {
+            JSONObject track = new JSONObject();
+            track.put("uri", "spotify:track:" + trackId);
+            jsonArray.put(track);
+        }
         JSONObject jsonObject = new JSONObject();
+        jsonObject.put("tracks", jsonArray);
 
         try {
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(new URI(""))
-                    .header("Content-Type", "application/json")
+                    .uri(new URI(this.apiUrl + "playlist/" + this.playlistId + "/tracks"))
                     .header("Authorization", "Bearer " + this.accessToken)
+                    .header("Content-Type", "application/json")
                     .method("DELETE", HttpRequest.BodyPublishers.ofString(jsonObject.toString()))
                     .build();
 
             HttpResponse<String> response = HttpClient.newHttpClient()
                     .send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println(response);
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                System.out.printf("%d tracks removed" + ANSI_GREEN + "\u2713" + ANSI_RESET + "\n", trackIds.size());
+            } else {
+                System.out.println("Failed to remove tracks " + ANSI_RED + "\u2717" + ANSI_RESET);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
