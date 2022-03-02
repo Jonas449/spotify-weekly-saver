@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Spotify {
     private String accessToken;
@@ -22,7 +21,6 @@ public class Spotify {
     private final String authUrl = "https://accounts.spotify.com/api/token";
     private final String apiUrl = "https://api.spotify.com/v1/";
     private final String market = "DE";
-    private ArrayList<String> trackIds;
     private PropertyHandler rp;
     public static final String ANSI_RESET = "\u001B[0m";
     public static final String ANSI_RED = "\u001B[31m";
@@ -38,12 +36,15 @@ public class Spotify {
         this.refreshToken = rp.getProperty("RefreshToken");
 
         this.getAuthToken();
-        this.trackIds = this.getSongs(this.playlistIdWeekly);
-        this.addSongs();
+        this.addSongs(this.getSongs(this.playlistIdWeekly));
 
-        if (Boolean.parseBoolean(rp.getProperty("CheckDuplications"))) {
-            System.out.println("Checking for duplicates...");
-            this.removeTrack(this.checkDuplications());
+        System.out.println("Checking for duplicates...");
+        ArrayList<String> duplicates = this.checkDuplications(this.getSongs(playlistId));
+
+        if (Boolean.parseBoolean(rp.getProperty("RemoveDuplications"))) {
+            System.out.println("Removing duplicates...");
+            this.removeTrack(duplicates);
+            this.addSongs(duplicates);
         }
     }
 
@@ -72,7 +73,7 @@ public class Spotify {
 
                 System.out.println("Get Auth Token successfully " + ANSI_GREEN + "\u2713" + ANSI_RESET);
             } else {
-                System.out.println("Failed to get Auth Token " + ANSI_RED + "\u2717" + ANSI_RESET);
+                System.err.println("Failed to get Auth Token " + ANSI_RED + "\u2717" + ANSI_RESET);
             }
 
         } catch (Exception e) {
@@ -100,13 +101,13 @@ public class Spotify {
                 for (int i = 0; i < items.length(); i++) {
                     JSONObject item = items.getJSONObject(i);
                     JSONObject track = item.getJSONObject("track");
-                    String trackId = track.getString("id");
+                    String trackId = track.getString("uri");
                     trackIds.add(trackId);
                 }
-
-                System.out.println("Track IDs loaded successfully " + ANSI_GREEN + "\u2713" + ANSI_RESET);
+                System.out.printf("Track IDs from %s loaded successfully " + ANSI_GREEN + "\u2713" + ANSI_RESET + "\n",
+                        jsonResponse.getString("name"));
             } else {
-                System.out.println("Failed to get songs from weekly playlist " + ANSI_RED + "\u2717" + ANSI_RESET);
+                System.err.println("Failed to get songs from playlist " + ANSI_RED + "\u2717" + ANSI_RESET);
             }
 
         } catch (Exception e) {
@@ -116,30 +117,29 @@ public class Spotify {
         return trackIds;
     }
 
-    private void addSongs() {
-        String baseUrl = this.apiUrl + "playlists/" + this.playlistId + "/tracks?uris=";
-        String prefix = "spotify:track:";
-        AtomicBoolean first = new AtomicBoolean(true);
-        StringBuilder url = new StringBuilder();
+    private void addSongs(ArrayList<String> trackIds) {
+        if (trackIds.size() == 0) {
+            System.out.println("No new Tracks to add " + ANSI_GREEN + "\u2713" + ANSI_RESET);
+            return;
+        }
 
-        url.append(baseUrl);
+        String url = this.apiUrl + "playlists/" + this.playlistId + "/tracks";
 
-        this.trackIds.forEach((String trackId) -> {
-            if (!first.get()) {
-                url.append(",");
-            }
-            first.set(false);
-            url.append(prefix);
-            url.append(trackId);
-        });
+        JSONArray jsonArray = new JSONArray();
+
+        for (String trackId: trackIds) {
+            jsonArray.put(trackId);
+        }
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("uris", jsonArray);
 
         try {
             HttpRequest hr = HttpRequest.newBuilder()
-                    .uri(new URI(url.toString()))
+                    .uri(new URI(url))
                     .header("Accept", "application/json")
                     .header("Content-Type", "application/json")
                     .header("Authorization", "Bearer " + this.accessToken)
-                    .POST(HttpRequest.BodyPublishers.noBody())
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody.toString()))
                     .build();
 
             HttpResponse<String> response = HttpClient.newHttpClient()
@@ -148,7 +148,7 @@ public class Spotify {
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 System.out.println("Tracks added successfully " + ANSI_GREEN + "\u2713" + ANSI_RESET);
             } else {
-                System.out.println("Failed to add songs " + ANSI_RED + "\u2717" + ANSI_RESET);
+                System.err.println("Failed to add songs " + ANSI_RED + "\u2717" + ANSI_RESET);
             }
 
         } catch (Exception e) {
@@ -156,23 +156,23 @@ public class Spotify {
         }
     }
 
-    private ArrayList<String> checkDuplications() {
-        ArrayList<String> trackIds = getSongs(this.playlistId);
-        Set<String> set = new HashSet<>();
-
-        ArrayList<String> duplicates = new ArrayList<>();
+    private ArrayList<String> checkDuplications(ArrayList<String> trackIds) {
+        Set<String> duplicates = new HashSet<>();
+        Set<String> tracks = new HashSet<>();
+        int counter = 0;
 
         for (String trackId : trackIds) {
-            if (!set.add(trackId)) {
+            if (!tracks.add(trackId)) {
                 duplicates.add(trackId);
+                counter++;
             }
         }
-
-        if (set.size() < trackIds.size()) {
-            System.out.printf("%d duplicates found \n", trackIds.size() - set.size());
+        
+        if (tracks.size() < trackIds.size()) {
+            System.out.printf("%d duplicates found \n", counter);
         }
 
-        return duplicates;
+        return new ArrayList<>(duplicates);
     }
 
     private void removeTrack(ArrayList<String> trackIds) {
@@ -180,7 +180,7 @@ public class Spotify {
 
         for (String trackId: trackIds) {
             JSONObject track = new JSONObject();
-            track.put("uri", "spotify:track:" + trackId);
+            track.put("uri", trackId);
             jsonArray.put(track);
         }
         JSONObject requestBody = new JSONObject();
@@ -198,9 +198,9 @@ public class Spotify {
                     .send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                System.out.printf("%d tracks removed" + ANSI_GREEN + "\u2713" + ANSI_RESET + "\n", trackIds.size());
+                System.out.printf("%d track ids removed " + ANSI_GREEN + "\u2713" + ANSI_RESET + "\n", trackIds.size());
             } else {
-                System.out.println("Failed to remove tracks " + ANSI_RED + "\u2717" + ANSI_RESET);
+                System.err.println("Failed to remove tracks " + ANSI_RED + "\u2717" + ANSI_RESET);
             }
         } catch (Exception e) {
             e.printStackTrace();
