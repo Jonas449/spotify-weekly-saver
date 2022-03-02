@@ -1,5 +1,6 @@
 import org.json.JSONArray;
 import org.json.JSONObject;
+import util.MessageBuilder;
 import util.PropertyHandler;
 
 import java.net.URI;
@@ -22,10 +23,6 @@ public class Spotify {
     private final String apiUrl = "https://api.spotify.com/v1/";
     private final String market = "DE";
     private PropertyHandler rp;
-    public static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-
 
     public Spotify() {
         this.rp = new PropertyHandler();
@@ -68,12 +65,12 @@ public class Spotify {
                 this.accessToken = jsonResponse.getString("access_token");
                 if (jsonResponse.has("refresh_token")) {
                     rp.setProperty("RefreshToken", jsonResponse.getString("refresh_token"));
-                    System.out.println("Saved new refresh token " + ANSI_GREEN + "\u2713" + ANSI_RESET);
+                    MessageBuilder.successMessage("Saved new refresh token");
                 }
 
-                System.out.println("Get Auth Token successfully " + ANSI_GREEN + "\u2713" + ANSI_RESET);
+                MessageBuilder.successMessage("Get Auth Token successfully");
             } else {
-                System.err.println("Failed to get Auth Token " + ANSI_RED + "\u2717" + ANSI_RESET);
+                MessageBuilder.errorMessage("Failed to get Auth Token");
             }
 
         } catch (Exception e) {
@@ -104,10 +101,10 @@ public class Spotify {
                     String trackId = track.getString("uri");
                     trackIds.add(trackId);
                 }
-                System.out.printf("Track IDs from %s loaded successfully " + ANSI_GREEN + "\u2713" + ANSI_RESET + "\n",
-                        jsonResponse.getString("name"));
+                MessageBuilder.successMessage(String.format("Track IDs from %s loaded successfully",
+                        jsonResponse.getString("name")));
             } else {
-                System.err.println("Failed to get songs from playlist " + ANSI_RED + "\u2717" + ANSI_RESET);
+                MessageBuilder.errorMessage("Failed to get songs from playlist");
             }
 
         } catch (Exception e) {
@@ -118,11 +115,6 @@ public class Spotify {
     }
 
     private void addSongs(ArrayList<String> trackIds) {
-        if (trackIds.size() == 0) {
-            System.out.println("No new Tracks to add " + ANSI_GREEN + "\u2713" + ANSI_RESET);
-            return;
-        }
-
         String url = this.apiUrl + "playlists/" + this.playlistId + "/tracks";
 
         JSONArray jsonArray = new JSONArray();
@@ -146,9 +138,9 @@ public class Spotify {
                     .send(hr, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                System.out.println("Tracks added successfully " + ANSI_GREEN + "\u2713" + ANSI_RESET);
+                MessageBuilder.successMessage("Tracks added successfully");
             } else {
-                System.err.println("Failed to add songs " + ANSI_RED + "\u2717" + ANSI_RESET);
+                MessageBuilder.errorMessage("Failed to add songs");
             }
 
         } catch (Exception e) {
@@ -198,9 +190,9 @@ public class Spotify {
                     .send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                System.out.printf("%d track ids removed " + ANSI_GREEN + "\u2713" + ANSI_RESET + "\n", trackIds.size());
+                MessageBuilder.successMessage(String.format("%d track ids removed", trackIds.size()));
             } else {
-                System.err.println("Failed to remove tracks " + ANSI_RED + "\u2717" + ANSI_RESET);
+                MessageBuilder.errorMessage("Failed to remove tracks");
             }
         } catch (Exception e) {
             e.printStackTrace();

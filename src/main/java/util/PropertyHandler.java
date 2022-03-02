@@ -5,9 +5,6 @@ import java.io.FileWriter;
 import java.util.Properties;
 
 public class PropertyHandler {
-    private static final String ANSI_RESET = "\u001B[0m";
-    private static final String ANSI_RED = "\u001B[31m";
-    private static final String ANSI_GREEN = "\u001B[32m";
     private String fileName = "app.config";
     private Properties properties;
 
@@ -52,9 +49,9 @@ public class PropertyHandler {
             this.properties.setProperty(key, value);
             this.properties.store(new FileWriter(this.fileName), null);
             System.out.println("Added settings to " + this.fileName);
-            System.out.println("Set new " + key + " " + ANSI_GREEN + "\u2713" + ANSI_RESET);
+            MessageBuilder.successMessage("Set new " + key);
         } catch (Exception e) {
-            System.err.println("Failed to set new " + key + " " + ANSI_RED + "\u2717" + ANSI_RESET);
+            MessageBuilder.errorMessage("Failed to set new " + key);
         }
     }
 }
