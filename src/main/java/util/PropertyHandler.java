@@ -18,7 +18,7 @@ public class PropertyHandler {
             this.properties.load(fr);
             fr.close();
         } catch (Exception e) {
-            System.out.println(this.fileName + " not found");
+            System.err.println(this.fileName + " not found");
         }
     }
 
@@ -30,7 +30,7 @@ public class PropertyHandler {
             this.properties.load(fr);
             fr.close();
         } catch (Exception e) {
-            System.out.println(this.fileName + "not found");
+            System.err.println(this.fileName + "not found");
         }
     }
 
@@ -52,9 +52,9 @@ public class PropertyHandler {
             this.properties.setProperty(key, value);
             this.properties.store(new FileWriter(this.fileName), null);
             System.out.println("Added settings to " + this.fileName);
-            System.out.println("Set new "+ key + " " + ANSI_GREEN + "\u2713" + ANSI_RESET);
+            System.out.println("Set new " + key + " " + ANSI_GREEN + "\u2713" + ANSI_RESET);
         } catch (Exception e) {
-            System.out.println("Failed to set new "+ key + " " + ANSI_RED + "\u2717" + ANSI_RESET);
+            System.err.println("Failed to set new " + key + " " + ANSI_RED + "\u2717" + ANSI_RESET);
         }
     }
 }

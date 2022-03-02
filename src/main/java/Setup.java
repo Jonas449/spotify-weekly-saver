@@ -38,7 +38,7 @@ public class Setup {
         }
 
         if (!isCreated) {
-            System.out.println("Failed to create config file " + ANSI_RED + "\u2717" + ANSI_RESET);
+            System.err.println("Failed to create config file " + ANSI_RED + "\u2717" + ANSI_RESET);
             System.exit(0);
         }
 
