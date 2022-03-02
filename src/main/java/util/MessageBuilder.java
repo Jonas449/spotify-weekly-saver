@@ -7,7 +7,7 @@ public class MessageBuilder {
     private static final String checkSymbol = "\u2713";
     private static final String crossSymbol = "\u2717";
 
-    public static String successMessage(String message) {
+    public static void successMessage(String message) {
         System.out.println(message + " " + ANSI_GREEN + checkSymbol + ANSI_RESET);
     }
 

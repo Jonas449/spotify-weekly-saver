@@ -41,6 +41,7 @@ public class Spotify {
         if (Boolean.parseBoolean(rp.getProperty("RemoveDuplications"))) {
             System.out.println("Removing duplicates...");
             this.removeTrack(duplicates);
+            System.out.println("Adding tracks...");
             this.addSongs(duplicates);
         }
     }
@@ -161,7 +162,7 @@ public class Spotify {
         }
         
         if (tracks.size() < trackIds.size()) {
-            System.out.printf("%d duplicates found \n", counter);
+            System.out.printf("%d Duplicates found \n", counter);
         }
 
         return new ArrayList<>(duplicates);
@@ -190,7 +191,7 @@ public class Spotify {
                     .send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
-                MessageBuilder.successMessage(String.format("%d track ids removed", trackIds.size()));
+                MessageBuilder.successMessage(String.format("%d Track IDs removed", trackIds.size()));
             } else {
                 MessageBuilder.errorMessage("Failed to remove tracks");
             }
