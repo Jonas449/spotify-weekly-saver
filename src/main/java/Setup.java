@@ -28,15 +28,12 @@ public class Setup {
     private void startSetup() {
         //Create new config file
         File config = new File(defaultConfigName);
-        boolean isCreated = false;
 
         try {
-            isCreated = config.createNewFile();
+            if (config.createNewFile()) {
+                MessageBuilder.successMessage("Created new config file");
+            }
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (!isCreated) {
             MessageBuilder.errorMessage("Failed to create config file");
             System.exit(0);
         }
@@ -52,6 +49,15 @@ public class Setup {
         String playlistId = scanner.next();
         System.out.println("Spotify Playlist Weekly ID:");
         String playlistIdWeekly = scanner.next();
+        System.out.println("Refresh Token:");
+        String refreshToken = scanner.next();
+        System.out.println("Remove duplicates? (y/n)");
+        String duplicates  = scanner.next();
+        Boolean removeDuplicates = false;
+
+        if (duplicates.equals("y")) {
+            removeDuplicates = true;
+        }
 
         this.properties = new Properties();
 
@@ -63,6 +69,8 @@ public class Setup {
             this.properties.setProperty("ClientSecret", clientSecret);
             this.properties.setProperty("PlaylistId", playlistId);
             this.properties.setProperty("PlaylistIdWeekly", playlistIdWeekly);
+            this.properties.setProperty("RefreshToken", refreshToken);
+            this.properties.setProperty("RemoveDuplications", removeDuplicates.toString());
             this.properties.store(new FileWriter(this.defaultConfigName), null);
             fileReader.close();
             MessageBuilder.successMessage("Added settings to " + this.defaultConfigName);
