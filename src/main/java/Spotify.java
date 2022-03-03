@@ -12,6 +12,10 @@ import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Class to interact with the Spotify Api
+ * @version 03 March 2022
+ */
 public class Spotify {
     private String accessToken;
     private final String clientId;
@@ -32,21 +36,28 @@ public class Spotify {
         this.playlistIdWeekly = rp.getProperty("PlaylistIdWeekly");
         this.refreshToken = rp.getProperty("RefreshToken");
 
-        this.getAuthToken();
-        this.addSongs(this.getSongs(this.playlistIdWeekly));
+        if (this.getAuthToken()) {
+            this.addSongs(this.getSongs(this.playlistIdWeekly), this.playlistId);
 
-        System.out.println("Checking for duplicates...");
-        ArrayList<String> duplicates = this.checkDuplications(this.getSongs(playlistId));
+            System.out.println("Checking for duplicates...");
+            ArrayList<String> duplicates = this.checkDuplications(this.getSongs(playlistId));
 
-        if (Boolean.parseBoolean(rp.getProperty("RemoveDuplications"))) {
-            System.out.println("Removing duplicates...");
-            this.removeTrack(duplicates);
-            System.out.println("Adding tracks...");
-            this.addSongs(duplicates);
+            if (Boolean.parseBoolean(rp.getProperty("RemoveDuplications"))) {
+                System.out.println("Removing duplicates...");
+                this.removeTrack(duplicates, this.playlistId);
+                // The Spotify api deletes all songs that have the same track id,
+                // so after deleting the duplicates they will be added to the playlist again
+                System.out.println("Adding tracks...");
+                this.addSongs(duplicates, this.playlistId);
+            }
         }
     }
 
-    private void getAuthToken() {
+    /**
+     * Method to get the Auth Token by using the Refresh Token
+     * @return True if successfull
+     */
+    private boolean getAuthToken() {
         String header = clientId + ":" + clientSecret;
         String encodedHeader = "Basic " + Base64.getEncoder().encodeToString(header.getBytes());
 
@@ -72,13 +83,21 @@ public class Spotify {
                 MessageBuilder.successMessage("Get Auth Token successfully");
             } else {
                 MessageBuilder.errorMessage("Failed to get Auth Token");
+                return false;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
+        return true;
     }
 
+    /**
+     * Method to get songs from a playlist
+     * @param playlistId Playlist ID to get the songs from
+     * @return ArrayList with Spotify Track Uris
+     */
     private ArrayList<String> getSongs(String playlistId) {
         ArrayList<String> trackIds = new ArrayList<>();
         String header = "Bearer " + this.accessToken;
@@ -115,8 +134,13 @@ public class Spotify {
         return trackIds;
     }
 
-    private void addSongs(ArrayList<String> trackIds) {
-        String url = this.apiUrl + "playlists/" + this.playlistId + "/tracks";
+    /**
+     * Method to add songs to the desired playlist
+     * @param trackIds Array list with track IDs
+     * @param playlistId Playlist ID
+     */
+    private void addSongs(ArrayList<String> trackIds, String playlistId) {
+        String url = this.apiUrl + "playlists/" + playlistId + "/tracks";
 
         JSONArray jsonArray = new JSONArray();
 
@@ -149,6 +173,11 @@ public class Spotify {
         }
     }
 
+    /**
+     * Checks for duplicates in an array list
+     * @param trackIds Array list with track IDs
+     * @return Unique duplicates
+     */
     private ArrayList<String> checkDuplications(ArrayList<String> trackIds) {
         Set<String> duplicates = new HashSet<>();
         Set<String> tracks = new HashSet<>();
@@ -168,7 +197,12 @@ public class Spotify {
         return new ArrayList<>(duplicates);
     }
 
-    private void removeTrack(ArrayList<String> trackIds) {
+    /**
+     * Method to remove tracks from a desired playlist
+     * @param trackIds Array list with track IDs
+     * @param playlistId Playlist ID
+     */
+    private void removeTrack(ArrayList<String> trackIds, String playlistId) {
         JSONArray jsonArray = new JSONArray();
 
         for (String trackId: trackIds) {
@@ -181,7 +215,7 @@ public class Spotify {
 
         try {
             HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .uri(new URI(this.apiUrl + "playlists/" + this.playlistId + "/tracks"))
+                    .uri(new URI(this.apiUrl + "playlists/" + playlistId + "/tracks"))
                     .header("Authorization", "Bearer " + this.accessToken)
                     .header("Content-Type", "application/json")
                     .method("DELETE", HttpRequest.BodyPublishers.ofString(requestBody.toString()))
@@ -200,6 +234,11 @@ public class Spotify {
         }
     }
 
+    /**
+     * Getter for playlist api url
+     * @param playlistId Playlist ID
+     * @return Api url
+     */
     private String getPlaylistApiUrl(String playlistId) {
         return this.apiUrl + "playlists/" + playlistId + "/?market=" + this.market;
     }
