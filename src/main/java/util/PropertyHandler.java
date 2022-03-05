@@ -4,13 +4,17 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Properties;
 
+/**
+ * This class is used to interact with the configuration file
+ * @version 03 March 2022
+ */
 public class PropertyHandler {
-    private static final String ANSI_RESET = "\u001B[0m";
-    private static final String ANSI_RED = "\u001B[31m";
-    private static final String ANSI_GREEN = "\u001B[32m";
     private String fileName = "app.config";
     private Properties properties;
 
+    /**
+     * Constructor
+     */
     public PropertyHandler() {
         try {
             FileReader fr = new FileReader(this.fileName);
@@ -18,10 +22,14 @@ public class PropertyHandler {
             this.properties.load(fr);
             fr.close();
         } catch (Exception e) {
-            System.out.println(this.fileName + " not found");
+            System.err.println(this.fileName + " not found");
         }
     }
 
+    /**
+     * Constructor with custom file name
+     * @param fileName Configuration file name
+     */
     public PropertyHandler(String fileName) {
         this.fileName = fileName;
         try {
@@ -30,10 +38,15 @@ public class PropertyHandler {
             this.properties.load(fr);
             fr.close();
         } catch (Exception e) {
-            System.out.println(this.fileName + "not found");
+            System.err.println(this.fileName + "not found");
         }
     }
 
+    /**
+     * Gets a property in the configuration file
+     * @param property Property key
+     * @return Property value
+     */
     public String getProperty(String property) {
         if(this.properties != null) {
             return this.properties.getProperty(property);
@@ -41,10 +54,19 @@ public class PropertyHandler {
         return null;
     }
 
+    /**
+     * Getter for properties
+     * @return Properties object
+     */
     public Properties getProperties() {
         return properties;
     }
 
+    /**
+     * Sets a property in the configuration file
+     * @param key Property key
+     * @param value Property value
+     */
     public void setProperty(String key, String value) {
         try {
             FileReader fileReader = new FileReader(this.fileName);
@@ -52,9 +74,9 @@ public class PropertyHandler {
             this.properties.setProperty(key, value);
             this.properties.store(new FileWriter(this.fileName), null);
             System.out.println("Added settings to " + this.fileName);
-            System.out.println("Set new "+ key + " " + ANSI_GREEN + "\u2713" + ANSI_RESET);
+            MessageBuilder.successMessage("Set new " + key);
         } catch (Exception e) {
-            System.out.println("Failed to set new "+ key + " " + ANSI_RED + "\u2717" + ANSI_RESET);
+            MessageBuilder.errorMessage("Failed to set new " + key);
         }
     }
 }

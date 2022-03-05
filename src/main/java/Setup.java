@@ -1,3 +1,5 @@
+import util.MessageBuilder;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -5,10 +7,11 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.Scanner;
 
+/**
+ * This class is used to create a configuration file
+ * @version 03 March 2022
+ */
 public class Setup {
-    private static final String ANSI_RESET = "\u001B[0m";
-    private static final String ANSI_RED = "\u001B[31m";
-    private static final String ANSI_GREEN = "\u001B[32m";
     private final String defaultConfigName = "app.config";
     private Properties properties;
 
@@ -18,7 +21,7 @@ public class Setup {
     public Setup() {
         File file = new File(defaultConfigName);
         if(file.exists()) {
-            System.out.println("Config found " + ANSI_GREEN + "\u2713" + ANSI_RESET);
+            MessageBuilder.successMessage("Config found");
         } else {
             System.out.println("Starting setup...");
             this.startSetup();
@@ -26,19 +29,19 @@ public class Setup {
         new Spotify();
     }
 
+    /**
+     * Starts the setup to create a new configuration file
+     */
     private void startSetup() {
         //Create new config file
         File config = new File(defaultConfigName);
-        boolean isCreated = false;
 
         try {
-            isCreated = config.createNewFile();
+            if (config.createNewFile()) {
+                MessageBuilder.successMessage("Created new config file");
+            }
         } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        if (!isCreated) {
-            System.out.println("Failed to create config file " + ANSI_RED + "\u2717" + ANSI_RESET);
+            MessageBuilder.errorMessage("Failed to create config file");
             System.exit(0);
         }
 
@@ -53,20 +56,31 @@ public class Setup {
         String playlistId = scanner.next();
         System.out.println("Spotify Playlist Weekly ID:");
         String playlistIdWeekly = scanner.next();
+        System.out.println("Refresh Token:");
+        String refreshToken = scanner.next();
+        System.out.println("Remove duplicates? (y/n)");
+        String duplicates  = scanner.next();
+        Boolean removeDuplicates = false;
+
+        if (duplicates.equals("y")) {
+            removeDuplicates = true;
+        }
 
         this.properties = new Properties();
 
         // Write settings to config file
         try {
-            FileReader fileReader = new FileReader(defaultConfigName);
+            FileReader fileReader = new FileReader(this.defaultConfigName);
             this.properties.load(fileReader);
             this.properties.setProperty("ClientId", clientId);
             this.properties.setProperty("ClientSecret", clientSecret);
             this.properties.setProperty("PlaylistId", playlistId);
             this.properties.setProperty("PlaylistIdWeekly", playlistIdWeekly);
-            this.properties.store(new FileWriter(defaultConfigName), null);
+            this.properties.setProperty("RefreshToken", refreshToken);
+            this.properties.setProperty("RemoveDuplications", removeDuplicates.toString());
+            this.properties.store(new FileWriter(this.defaultConfigName), null);
             fileReader.close();
-            System.out.println("Added settings to " + defaultConfigName + ANSI_GREEN + "\u2713" + ANSI_RESET);
+            MessageBuilder.successMessage("Added settings to " + this.defaultConfigName);
         } catch (Exception e) {
             e.printStackTrace();
         }
