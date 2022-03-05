@@ -4,10 +4,17 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.Properties;
 
+/**
+ * This class is used to interact with the configuration file
+ * @version 03 March 2022
+ */
 public class PropertyHandler {
     private String fileName = "app.config";
     private Properties properties;
 
+    /**
+     * Constructor
+     */
     public PropertyHandler() {
         try {
             FileReader fr = new FileReader(this.fileName);
@@ -19,6 +26,10 @@ public class PropertyHandler {
         }
     }
 
+    /**
+     * Constructor with custom file name
+     * @param fileName Configuration file name
+     */
     public PropertyHandler(String fileName) {
         this.fileName = fileName;
         try {
@@ -31,6 +42,11 @@ public class PropertyHandler {
         }
     }
 
+    /**
+     * Gets a property in the configuration file
+     * @param property Property key
+     * @return Property value
+     */
     public String getProperty(String property) {
         if(this.properties != null) {
             return this.properties.getProperty(property);
@@ -38,10 +54,19 @@ public class PropertyHandler {
         return null;
     }
 
+    /**
+     * Getter for properties
+     * @return Properties object
+     */
     public Properties getProperties() {
         return properties;
     }
 
+    /**
+     * Sets a property in the configuration file
+     * @param key Property key
+     * @param value Property value
+     */
     public void setProperty(String key, String value) {
         try {
             FileReader fileReader = new FileReader(this.fileName);
