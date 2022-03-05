@@ -7,6 +7,10 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.Scanner;
 
+/**
+ * This class is used to create a configuration file
+ * @version 03 March 2022
+ */
 public class Setup {
     private final String defaultConfigName = "app.config";
     private Properties properties;
@@ -25,6 +29,9 @@ public class Setup {
         new Spotify();
     }
 
+    /**
+     * Starts the setup to create a new configuration file
+     */
     private void startSetup() {
         //Create new config file
         File config = new File(defaultConfigName);
