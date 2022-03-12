@@ -192,6 +192,8 @@ public class Spotify {
         
         if (tracks.size() < trackIds.size()) {
             System.out.printf("%d Duplicates found \n", counter);
+        } else {
+            System.out.println("No duplicates found");
         }
 
         return new ArrayList<>(duplicates);
